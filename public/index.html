@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>StudioPRO Access</title>
+  <style>
+    :root{--bg:#0b0b0d;--panel:#131317;--soft:#1d1d24;--text:#f4efe6;--muted:#c7bda9;--gold:#d4b071;--line:rgba(212,176,113,.25)}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,sans-serif;background:radial-gradient(circle at top,#1a1620 0,#0b0b0d 55%);color:var(--text)}
+    .wrap{min-height:100vh;display:grid;place-items:center;padding:24px}.card{width:min(520px,100%);background:linear-gradient(180deg,rgba(19,19,23,.98),rgba(10,10,12,.98));border:1px solid var(--line);border-radius:24px;padding:32px;box-shadow:0 25px 80px rgba(0,0,0,.45)}
+    h1{margin:0 0 10px;font-size:34px;font-family:Georgia,serif}p{color:var(--muted);line-height:1.5}label{display:block;margin:18px 0 8px;color:#eadfc8}input{width:100%;padding:15px 16px;border-radius:14px;border:1px solid #2d2d36;background:#0e0e12;color:#fff;font-size:16px}
+    button{margin-top:18px;width:100%;padding:15px;border:none;border-radius:14px;background:linear-gradient(135deg,#d4b071,#f0d7a3);color:#111;font-weight:700;font-size:16px;cursor:pointer}.muted{font-size:13px;color:#aa9d88;margin-top:14px}.err,.ok{margin-top:14px;padding:12px;border-radius:12px;display:none}.err{background:#341a1a;color:#ffb6b6}.ok{background:#18301e;color:#b7f0c2}
+    .foot{margin-top:18px;font-size:12px;color:#8e836f}
+  </style>
+</head>
+<body>
+<div class="wrap"><div class="card">
+  <h1>StudioPRO</h1>
+  <p>Ingresa con tu key única. Tu cuenta permite hasta <strong>2 dispositivos</strong>. Un tercer dispositivo nuevo será bloqueado.</p>
+  <label>Key única</label>
+  <input id="key" placeholder="SP-XXXXXX-XXXXXX-XXXXXX" />
+  <button id="loginBtn">Entrar</button>
+  <div class="err" id="err"></div>
+  <div class="ok" id="ok"></div>
+  <div class="foot">Acceso privado de membresías StudioPRO.</div>
+</div></div>
+<script>
+async function sha256(text){const e=new TextEncoder().encode(text);const d=await crypto.subtle.digest('SHA-256',e);return [...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join('')}
+async function deviceFingerprint(){const raw=[navigator.userAgent,navigator.language,navigator.platform,screen.width+'x'+screen.height,new Date().getTimezoneOffset()].join('|');return sha256(raw)}
+function deviceLabel(){return [navigator.platform||'device',navigator.language||'',screen.width+'x'+screen.height].join(' • ')}
+const err=document.getElementById('err'),ok=document.getElementById('ok');
+document.getElementById('loginBtn').onclick=async()=>{err.style.display='none';ok.style.display='none';const key=document.getElementById('key').value.trim();if(!key){err.textContent='Ingresa tu key';err.style.display='block';return;}const deviceId=await deviceFingerprint();const res=await fetch('/.netlify/functions/login-with-key',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({key,deviceId,deviceLabel:deviceLabel()})});const data=await res.json();if(!res.ok){err.textContent=data.error||'No se pudo entrar';err.style.display='block';return;}ok.textContent='Acceso correcto. Entrando...';ok.style.display='block';location.href='/app';};
+</script>
+</body>
+</html>
